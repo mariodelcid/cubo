@@ -1,16 +1,8 @@
-# Cubo — Railway configuration
+# GitHub → Railway deploy config (no local CLI uploads needed)
 # Docs: docs/RAILWAY.md
-#
-# Required Railway services (same project):
-#   1. This web service (from GitHub repo)
-#   2. PostgreSQL plugin (provides DATABASE_URL)
-#
-# Optional:
-#   Redis plugin (provides REDIS_URL) — for caching/real-time later
 
 [build]
-builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+builder = "RAILPACK"
 
 [deploy]
 startCommand = "sh scripts/start-production.sh"

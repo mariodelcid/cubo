@@ -5,6 +5,8 @@ import { ListingCard } from "@/components/listings/listing-card";
 import { SITE_NAME } from "@/lib/constants";
 import { Tag, Gavel, TrendingUp, Shield } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 async function getFeaturedListings() {
   try {
     return await db.listing.findMany({

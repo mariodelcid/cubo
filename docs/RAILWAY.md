@@ -1,79 +1,46 @@
-# Deploy Cubo on Railway (production)
+# Deploy Cubo on Railway (GitHub → Railway)
 
-Everything runs on Railway — **no local server or database required**.
+**Flow:** Push to GitHub `main` → Railway auto-builds and deploys.  
+No local server or CLI uploads required.
 
-## Architecture on Railway
+## Railway project
 
-```
-┌──────────────── Railway Project ────────────────┐
-│                                                  │
-│  ┌─────────────┐      ┌──────────────────┐      │
-│  │  Cubo Web   │──────│   PostgreSQL     │      │
-│  │  (Docker)   │      │   (plugin)       │      │
-│  └─────────────┘      └──────────────────┘      │
-│        │                                         │
-│        │  optional                               │
-│        └──────────► Redis (plugin)               │
-└──────────────────────────────────────────────────┘
-```
+**Dashboard:** https://railway.com/project/d49e152f-da57-4ae0-b2c4-405f18ba4856  
+**Live URL:** https://cubo-production-c3c5.up.railway.app
 
-## Step 1 — Create services
+## Services (keep only these)
 
-1. Open your Railway project (connected to `mariodelcid/cubo`)
-2. Click **+ New** → **Database** → **PostgreSQL**
-3. Wait for Postgres to finish provisioning
+| Service | Purpose |
+|---------|---------|
+| **cubo** | Web app — connected to GitHub `mariodelcid/cubo` |
+| **Postgres** | Database — provides `DATABASE_URL` |
 
-## Step 2 — Link database to web service
+> Delete the **cubo-web** service if it exists — that was a mistaken CLI upload and is not needed.
 
-1. Click your **Cubo web service** (not Postgres)
-2. Go to **Variables**
-3. Click **+ New Variable** → **Add Reference**
-4. Select the PostgreSQL service → choose `DATABASE_URL`
-5. Save
-
-Railway injects the connection string automatically. **Do not use localhost.**
-
-## Step 3 — Set required variables (web service)
+## Required variables (on `cubo` service)
 
 | Variable | Value |
 |----------|-------|
-| `AUTH_SECRET` | Random string (`openssl rand -base64 32`) |
-| `NEXTAUTH_URL` | Your Railway URL, e.g. `https://cubo-production.up.railway.app` |
-| `NEXT_PUBLIC_APP_URL` | Same as `NEXTAUTH_URL` |
-| `RUN_SEED` | `true` — **only for first deploy**, then delete |
+| `DATABASE_URL` | Reference from **Postgres** service |
+| `AUTH_SECRET` | Random string |
+| `NEXTAUTH_URL` | `https://cubo-production-c3c5.up.railway.app` |
+| `NEXT_PUBLIC_APP_URL` | Same as above |
+| `RUN_SEED` | `true` on first deploy only, then remove |
 
-`RAILWAY_PUBLIC_DOMAIN` is set automatically when you enable a public domain.
+## How deploy works
 
-## Step 4 — Enable public URL
+1. You push to GitHub (`git push origin main`)
+2. Railway detects the change on the `cubo` service
+3. Railpack runs `npm ci`, `prisma generate`, `next build`
+4. Container starts → `prisma db push` → optional seed → `next start`
 
-1. Web service → **Settings** → **Networking**
-2. Click **Generate Domain**
-3. Copy the URL into `NEXTAUTH_URL` and `NEXT_PUBLIC_APP_URL`
-4. Redeploy if you added variables after the first deploy
+## Verify
 
-## Step 5 — Deploy
-
-Push to GitHub `main` — Railway rebuilds automatically.
-
-On each deploy the container:
-1. Runs `prisma db push` (creates/updates tables in Railway Postgres)
-2. Optionally seeds demo data if `RUN_SEED=true`
-3. Starts the Next.js server
-
-## Verify deployment
-
-- **App:** `https://YOUR-DOMAIN.up.railway.app`
-- **Health:** `https://YOUR-DOMAIN.up.railway.app/api/health`
-
-Health check should return:
-```json
-{
-  "status": "ok",
-  "checks": { "service": "ok", "database": "ok" }
-}
+```
+https://cubo-production-c3c5.up.railway.app/api/health
 ```
 
-If `database: "error"`, Postgres is not linked — repeat Step 2.
+Expected: `{ "status": "ok", "checks": { "database": "ok" } }`
 
 ## Demo accounts (after seed)
 
@@ -81,25 +48,3 @@ If `database: "error"`, Postgres is not linked — repeat Step 2.
 |-------|----------|
 | seller@cubo.market | password123 |
 | buyer@cubo.market | password123 |
-
-## Optional: Redis
-
-For caching and real-time features (Phase 2+):
-
-1. **+ New** → **Database** → **Redis**
-2. Add Reference: `REDIS_URL` from Redis service → web service
-
-## Troubleshooting
-
-| Problem | Fix |
-|---------|-----|
-| Build fails | Check Railway build logs; Dockerfile builds on Linux |
-| `DATABASE_URL is not set` | Link Postgres variable reference to web service |
-| App loads but no listings | Set `RUN_SEED=true`, redeploy, then remove it |
-| Auth login fails | Ensure `AUTH_SECRET` and `NEXTAUTH_URL` match your Railway domain |
-| 503 on `/api/health` | Postgres not reachable — check DATABASE_URL reference |
-
-## Local dev (optional)
-
-Local development is optional. Production runs entirely on Railway.
-Use `docker compose up` only if you want a local copy for testing.

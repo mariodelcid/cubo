@@ -5,17 +5,17 @@ echo "==> Cubo production start"
 
 if [ -z "$DATABASE_URL" ]; then
   echo "ERROR: DATABASE_URL is not set."
-  echo "Add a PostgreSQL plugin in Railway and link DATABASE_URL to this service."
+  echo "Link the Postgres DATABASE_URL variable to this service in Railway."
   exit 1
 fi
 
 echo "==> Applying database schema..."
-./node_modules/.bin/prisma db push --skip-generate
+npx prisma db push --skip-generate
 
 if [ "$RUN_SEED" = "true" ]; then
   echo "==> Seeding database..."
-  ./node_modules/.bin/tsx prisma/seed.ts
+  npx tsx prisma/seed.ts
 fi
 
-echo "==> Starting Next.js server on port ${PORT:-3000}..."
-exec node server.js
+echo "==> Starting Next.js on port ${PORT:-3000}..."
+exec next start -p "${PORT:-3000}"
