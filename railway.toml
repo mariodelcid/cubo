@@ -1,10 +1,20 @@
+# Cubo — Railway configuration
+# Docs: docs/RAILWAY.md
+#
+# Required Railway services (same project):
+#   1. This web service (from GitHub repo)
+#   2. PostgreSQL plugin (provides DATABASE_URL)
+#
+# Optional:
+#   Redis plugin (provides REDIS_URL) — for caching/real-time later
+
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "node server.js"
+startCommand = "sh scripts/start-production.sh"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 3
+restartPolicyMaxRetries = 5

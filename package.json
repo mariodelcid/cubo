@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
+    "start:production": "sh scripts/start-production.sh",
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -31,6 +32,8 @@
     "react-dom": "19.2.4",
     "stripe": "^18.0.0",
     "tailwind-merge": "^3.2.0",
+    "prisma": "^6.6.0",
+    "tsx": "^4.19.3",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -41,9 +44,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
-    "prisma": "^6.6.0",
     "tailwindcss": "^4",
-    "tsx": "^4.19.3",
     "typescript": "^5",
     "vitest": "^3.1.1"
   },

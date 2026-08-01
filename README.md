@@ -81,22 +81,22 @@ Open [http://localhost:3000](http://localhost:3000)
 | `npm run db:seed` | Seed demo data |
 | `npm test` | Run Vitest tests |
 
-## Deploy to Railway
+## Deploy to Railway (production)
 
-1. Push this repo to GitHub (`mariodelcid/cubo`)
-2. [Railway](https://railway.app) → **New Project** → **Deploy from GitHub**
-3. Add **PostgreSQL** service; Railway injects `DATABASE_URL`
-4. Set environment variables from `.env.example`:
-   - `AUTH_SECRET` (required)
-   - `NEXTAUTH_URL` → your Railway URL
-   - OAuth keys (optional)
-   - Stripe / S3 keys (when enabling payments/uploads)
-5. Deploy — Dockerfile builds standalone Next.js
-6. After first deploy, run in Railway shell:
-   ```bash
-   npx prisma migrate deploy
-   npm run db:seed
-   ```
+**Everything runs on Railway** — app server and PostgreSQL database. No local machine needed.
+
+See **[docs/RAILWAY.md](docs/RAILWAY.md)** for the full setup guide.
+
+Quick checklist:
+
+1. Railway project connected to `mariodelcid/cubo` on GitHub
+2. Add **PostgreSQL** plugin in the same project
+3. Link `DATABASE_URL` from Postgres → web service (Variable Reference)
+4. Set `AUTH_SECRET`, `NEXTAUTH_URL`, `NEXT_PUBLIC_APP_URL` on web service
+5. Set `RUN_SEED=true` for first deploy only (demo data)
+6. Generate a public domain under **Networking**
+
+Health check: `https://YOUR-DOMAIN.up.railway.app/api/health`
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full architecture, API reference, and roadmap.
 
