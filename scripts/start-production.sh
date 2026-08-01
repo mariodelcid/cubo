@@ -5,7 +5,6 @@ echo "==> Cubo production start"
 
 if [ -z "$DATABASE_URL" ]; then
   echo "ERROR: DATABASE_URL is not set."
-  echo "Link the Postgres DATABASE_URL variable to this service in Railway."
   exit 1
 fi
 
@@ -18,4 +17,4 @@ if [ "$RUN_SEED" = "true" ]; then
 fi
 
 echo "==> Starting Next.js on port ${PORT:-3000}..."
-exec next start -p "${PORT:-3000}"
+exec npx next start -p "${PORT:-3000}"
