@@ -26,7 +26,7 @@ export const listingSchema = z.object({
   description: z.string().min(10),
   categoryId: z.string().cuid(),
   type: z.enum(["FIXED_PRICE", "AUCTION", "AUCTION_WITH_BUY_NOW"]),
-  price: z.number().positive().optional(),
+  price: z.number().positive(),
   compareAtPrice: z.number().positive().optional(),
   quantity: z.number().int().min(1).default(1),
   condition: z.string().optional(),

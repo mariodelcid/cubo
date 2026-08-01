@@ -148,6 +148,49 @@ export async function getCategories() {
   });
 }
 
+export async function getListingsInCategory(slug: string, limit = 8) {
+  const category = await db.category.findUnique({
+    where: { slug },
+    include: { children: { orderBy: { sortOrder: "asc" } } },
+  });
+
+  if (!category) return { category: null, listings: [] };
+
+  const categoryIds = [category.id, ...category.children.map((c) => c.id)];
+
+  const listings = await db.listing.findMany({
+    where: { status: "ACTIVE", categoryId: { in: categoryIds } },
+    include: listingInclude,
+    orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
+    take: limit,
+  });
+
+  return { category, listings };
+}
+
+export async function getCategoryBySlug(slug: string) {
+  return db.category.findUnique({
+    where: { slug },
+    include: { children: { orderBy: { sortOrder: "asc" } } },
+  });
+}
+
+export async function countListingsInCategory(slug: string) {
+  const category = await db.category.findUnique({
+    where: { slug },
+    include: { children: true, parent: true },
+  });
+  if (!category) return 0;
+
+  const categoryIds = category.children.length
+    ? [category.id, ...category.children.map((c) => c.id)]
+    : [category.id];
+
+  return db.listing.count({
+    where: { status: "ACTIVE", categoryId: { in: categoryIds } },
+  });
+}
+
 export async function incrementViewCount(listingId: string, userId?: string) {
   await db.listing.update({
     where: { id: listingId },

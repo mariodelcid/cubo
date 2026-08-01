@@ -50,7 +50,11 @@ export function Header() {
             <Link
               key={cat.slug}
               href={`/category/${cat.slug}`}
-              className="text-sm text-gray-600 hover:text-blue-600"
+              className={`text-sm hover:text-blue-600 ${
+                "highlight" in cat && cat.highlight
+                  ? "font-semibold text-blue-600"
+                  : "text-gray-600"
+              }`}
             >
               {cat.name}
             </Link>
