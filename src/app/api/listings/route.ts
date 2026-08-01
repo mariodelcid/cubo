@@ -92,6 +92,7 @@ export async function POST(request: Request) {
     const createSchema = listingSchema.extend({
       status: z.enum(["DRAFT", "ACTIVE", "SCHEDULED"]).optional(),
       imageUrl: z.string().url().optional(),
+      imageUrls: z.array(z.string().url()).max(20).optional(),
     });
 
     const result = createSchema.safeParse(body);
@@ -104,6 +105,10 @@ export async function POST(request: Request) {
     while (await db.listing.findUnique({ where: { slug } })) {
       slug = `${baseSlug}-${counter++}`;
     }
+
+    const imageUrls =
+      body.imageUrls ??
+      (body.imageUrl ? [body.imageUrl as string] : []);
 
     const listing = await db.listing.create({
       data: {
@@ -122,9 +127,13 @@ export async function POST(request: Request) {
         status: (body.status as ListingStatus) ?? ListingStatus.ACTIVE,
         publishedAt: body.status === "DRAFT" ? null : new Date(),
         featured: false,
-        ...(body.imageUrl && {
+        ...(imageUrls.length > 0 && {
           images: {
-            create: { url: body.imageUrl, alt: data.title, sortOrder: 0 },
+            create: imageUrls.map((url: string, index: number) => ({
+              url,
+              alt: data.title,
+              sortOrder: index,
+            })),
           },
         }),
       },

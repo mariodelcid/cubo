@@ -15,7 +15,7 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
   const { slug } = await params;
   const listing = await db.listing.findUnique({
     where: { slug },
-    include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+    include: { images: { orderBy: { sortOrder: "asc" } } },
   });
 
   if (!listing) notFound();
@@ -41,7 +41,7 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
             categoryId: listing.categoryId,
             price: Number(listing.price),
             condition: listing.condition ?? "New",
-            imageUrl: listing.images[0]?.url,
+            imageUrls: listing.images.map((img) => img.url),
             type: listing.type,
             status: listing.status,
           }}

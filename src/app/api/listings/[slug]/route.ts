@@ -2,6 +2,14 @@ import { db } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-utils";
 import { getListingBySlug, incrementViewCount } from "@/lib/services/listings";
 import { auth } from "@/lib/auth";
+import { listingSchema } from "@/lib/validators/schemas";
+import { z } from "zod";
+
+const patchSchema = listingSchema.partial().extend({
+  status: z.enum(["DRAFT", "ACTIVE", "SCHEDULED", "REMOVED"]).optional(),
+  imageUrls: z.array(z.string().url()).max(20).optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+});
 
 export async function GET(
   _request: Request,
@@ -40,9 +48,51 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const updated = await db.listing.update({
+    const parsed = patchSchema.safeParse(body);
+    if (!parsed.success) {
+      return apiError("Invalid listing data", 400);
+    }
+
+    const { imageUrls, publishedAt, ...fields } = parsed.data;
+
+    const listingUpdate = {
+      ...(fields.title !== undefined && { title: fields.title }),
+      ...(fields.description !== undefined && { description: fields.description }),
+      ...(fields.categoryId !== undefined && { categoryId: fields.categoryId }),
+      ...(fields.price !== undefined && { price: fields.price }),
+      ...(fields.compareAtPrice !== undefined && { compareAtPrice: fields.compareAtPrice }),
+      ...(fields.quantity !== undefined && { quantity: fields.quantity }),
+      ...(fields.condition !== undefined && { condition: fields.condition }),
+      ...(fields.type !== undefined && { type: fields.type }),
+      ...(fields.sku !== undefined && { sku: fields.sku }),
+      ...(fields.localPickup !== undefined && { localPickup: fields.localPickup }),
+      ...(fields.status !== undefined && { status: fields.status }),
+      ...(publishedAt !== undefined && {
+        publishedAt: publishedAt ? new Date(publishedAt) : null,
+      }),
+    };
+
+    await db.listing.update({
       where: { id: listing.id },
-      data: body,
+      data: listingUpdate,
+    });
+
+    if (imageUrls) {
+      await db.listingImage.deleteMany({ where: { listingId: listing.id } });
+      if (imageUrls.length > 0) {
+        await db.listingImage.createMany({
+          data: imageUrls.map((url, index) => ({
+            listingId: listing.id,
+            url,
+            alt: fields.title ?? listing.title,
+            sortOrder: index,
+          })),
+        });
+      }
+    }
+
+    const updated = await db.listing.findUnique({
+      where: { id: listing.id },
       include: { images: true, category: true, auction: true },
     });
 

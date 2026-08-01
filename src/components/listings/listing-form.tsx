@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ImageUpload } from "@/components/listings/image-upload";
 
 interface Category {
   id: string;
@@ -22,6 +23,7 @@ interface ListingFormProps {
     price?: number;
     condition?: string;
     imageUrl?: string;
+    imageUrls?: string[];
     type?: string;
     status?: string;
   };
@@ -36,13 +38,19 @@ export function ListingForm({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [images, setImages] = useState<{ url: string }[]>(() => {
+    if (initial?.imageUrls?.length) {
+      return initial.imageUrls.map((url) => ({ url }));
+    }
+    if (initial?.imageUrl) return [{ url: initial.imageUrl }];
+    return [];
+  });
   const [form, setForm] = useState({
     title: initial?.title ?? "",
     description: initial?.description ?? "",
     categoryId: initial?.categoryId ?? "",
     price: initial?.price?.toString() ?? "",
     condition: initial?.condition ?? "New",
-    imageUrl: initial?.imageUrl ?? "",
     type: initial?.type ?? "FIXED_PRICE",
     status: initial?.status ?? "ACTIVE",
   });
@@ -65,7 +73,7 @@ export function ListingForm({
       condition: form.condition,
       type: form.type,
       status: form.status,
-      imageUrl: form.imageUrl || undefined,
+      imageUrls: images.map((img) => img.url),
     };
 
     const url =
@@ -168,14 +176,7 @@ export function ListingForm({
         </div>
       </div>
 
-      <Input
-        id="imageUrl"
-        label="Image URL (optional)"
-        type="url"
-        value={form.imageUrl}
-        onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-        placeholder="https://images.unsplash.com/..."
-      />
+      <ImageUpload images={images} onChange={setImages} maxImages={5} />
 
       <div>
         <label htmlFor="status" className="block text-sm font-medium text-gray-700">
